@@ -2571,7 +2571,7 @@ window.onload = function () {
 					var cans = Number($(this).find('value > unsignedInt').text());
 					save.garbageCansCheckedMoreThan20 = cans > 20;
                 }
-			}
+			});
 
 			// Let's try to build a list of NPCs. This sorta follows the logic of Utility.getAllCharacters() and we
 			//  also need to filter out monsterss and such now since the later logic that follows CanVisitIslandToday() will
