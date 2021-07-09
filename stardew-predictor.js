@@ -2564,6 +2564,14 @@ window.onload = function () {
 				save.hasSpecialCharm = true;
 			}
 
+			// Garbage can results are different depending if more than 20 cans have been checked
+			$(xmlDoc).find('stats > stat_dictionary > item').each(function () {
+				var id = $(this).find('key > string').text();
+				if (id === 'trashCansChecked') {
+					var cans = Number($(this).find('value > unsignedInt').text());
+					save.garbageCansCheckedMoreThan20 = cans > 20;
+                }
+
 			// Let's try to build a list of NPCs. This sorta follows the logic of Utility.getAllCharacters() and we
 			//  also need to filter out monsterss and such now since the later logic that follows CanVisitIslandToday() will
 			//  not have access to those fields. Reusing some code from Stardew Checkup to do this.
@@ -2629,23 +2637,94 @@ window.onload = function () {
 			});
 
 		} else if ($.QueryString.hasOwnProperty("id")) {
+			
+			// When ID is provided, check for other command line properties
 			save.gameID = handleBigInt($.QueryString.id);
-			save.daysPlayed = 1;
-			save.year = 1;
-			save.geodesCracked = [0];
-			save.timesEnchanted = [0];
-			save.deepestMineLevel = 0;
-			save.canHaveChildren = false;
-			save.quarryUnlocked = false;
-			save.desertUnlocked = false;
-			save.hasFurnaceRecipe = false;
-			save.hasSpecialCharm = false;
-			save.hasMetLeo = false;
+			
+			
+
+			var providedVariables = [];
+			providedVariables.push("gameID: " + save.gameID);
+			if ($.QueryString.hasOwnProperty("daysPlayed")) {
+				save.daysPlayed = parseInt($.QueryString.id).min(1);
+				save.year = Math.trunc(save.daysPlayed - 1 / 112); 
+			} else {
+				save.daysPlayed = 1;
+				save.year = 1;
+			}
+			if ($.QueryString.hasOwnProperty("geodesCracked")) {
+				save.geodesCracked = [parseInt($.QueryString.geodesCracked)];
+				providedVariables.push("geodesCracked: " + save.geodesCracked[0]);
+			} else {
+				save.geodesCracked = [0];
+			}
+			if ($.QueryString.hasOwnProperty("deepestMineLevel")) {
+				save.deepestMineLevel = parseInt($.QueryString.deepestMineLevel);
+				providedVariables.push("deepestMineLevel: " + save.deepestMineLevel);
+			} else {
+				save.deepestMineLevel = 0;
+			}
+			if ($.QueryString.hasOwnProperty("canHaveChildren")) {
+				save.canHaveChildren = $.QueryString.canHaveChildren == "true";
+				providedVariables.push("canHaveChildren: " + save.canHaveChildren);
+			} else {
+				save.canHaveChildren = false;
+			}
+			if ($.QueryString.hasOwnProperty("quarryUnlocked")) {
+				save.quarryUnlocked = $.QueryString.quarryUnlocked == "true";
+				providedVariables.push("quarryUnlocked: " + save.quarryUnlocked);
+			} else {
+				save.quarryUnlocked = false;
+			}
+			if ($.QueryString.hasOwnProperty("desertUnlocked")) {
+				save.desertUnlocked = $.QueryString.desertUnlocked == "true";
+				providedVariables.push("desertUnlocked: " + save.desertUnlocked);
+			} else {
+				save.desertUnlocked = false;
+			}
+			if ($.QueryString.hasOwnProperty("hasFurnaceRecipe")) {
+				save.hasFurnaceRecipe = $.QueryString.hasFurnaceRecipe == "true";
+				providedVariables.push("hasFurnaceRecipe: " + save.hasFurnaceRecipe);
+			} else {
+				save.hasFurnaceRecipe = false;
+			}
+			if ($.QueryString.hasOwnProperty("hasSpecialCharm")) {
+				save.hasSpecialCharm = $.QueryString.hasSpecialCharm == "true";
+				providedVariables.push("hasSpecialCharm: " + save.hasSpecialCharm);
+			} else {
+				save.hasSpecialCharm = false;
+			}
+			if ($.QueryString.hasOwnProperty("version")) {
+				save.version = $.QueryString.version;
+				providedVariables.push("version: " + save.version);
+			} else {
+				save.version = "1.5";
+			}
+			if ($.QueryString.hasOwnProperty("garbageCans")) {
+				save.garbageCansCheckedMoreThan20 = parseInt($.QueryString.garbageCans) > 20;
+				providedVariables.push("garbageCansCheckedMoreThan20: " + save.garbageCansCheckedMoreThan20);
+			} else {
+				save.garbageCansCheckedMoreThan20 = false;
+			}
+			if ($.QueryString.hasOwnProperty("timesEnchanted")) {
+				save.timesEnchanted = [parseInt($.QueryString.timesEnchanted)];
+				providedVariables.push("timesEnchanted: " + save.timesEnchanted[0]);
+			} else {
+				save.timesEnchanted = [0];
+			}
+			if ($.QueryString.hasOwnProperty("hasMetLeo")) {
+				save.hasMetLeo = $.QueryString.hasMetLeo == "true";
+				providedVariables.push("hasMetLeo: " + save.hasMetLeo);
+			} else {
+				save.hasMetLeo = false;
+			}
 			save.characters = [ 'George', 'Evelyn', 'Alex', 'Haley', 'Emily', 'Jodi', 'Sam', 'Vincent', 'Kent', 'Clint', 'Lewis', 'Pierre', 'Caroline', 'Abigail', 'Gus', 'Penny',  'Pam', 'Harvey', 'Willy', 'Elliott', 'Maru', 'Demetrius', 'Robin', 'Sebastian', 'Linus', 'Wizard', 'Jas', 'Marnie', 'Shane', 'Leah', 'Krobus', 'Sandy', 'Leo'];
-			save.version = "1.5";
-			output += '<span class="result">App run using supplied gameID ' + save.gameID + '.</span><br />' +
-				'<span class="result">No save information available so minimal progress assumed.</span><br />' +
-				'<span class="result">Newest version features will be included where possible.</span><br />\n';
+			output += '<span class="result">App run using supplied variables.</span><br />';
+			for (var i = 0; i < providedVariables.length; i++) {
+				output += '<span class="result">' + providedVariables[i] + '</span><br />';
+			}
+			output +=	'<span class="result">No save information available so minimal progress assumed.</span><br />' +
+						'<span class="result">Newest version features will be included where possible.</span><br />\n';
 		} else {
 			return '<span class="error">Fatal Error: Problem reading save file and no ID passed via query string.</span>';
 		}
@@ -2984,6 +3063,7 @@ window.onload = function () {
 		// Since luck in the vanilla game ranges between +/- .1, we are going to assume a roll below 0.1 is also guaranteed.
 		// We can bump this by .025 if the player has the special charm.
 		luckCheck = (save.hasSpecialCharm) ? 0.125 : 0.1;
+		luckCheck += 0.2
 
 		for (week = 0; week < 4; week++) {
 			output += "<tr>";
@@ -3001,8 +3081,12 @@ window.onload = function () {
 					for (i = 0; i < prewarm; i++) {
 						rng.NextDouble();
 					}
-					mega = (rng.NextDouble() < 0.01) ? true : false;
-					doubleMega = (rng.NextDouble() < 0.002) ? true : false;
+					mega = false;
+					doubleMega = false;
+					if (save.garbageCansCheckedMoreThan20) {
+						mega = (rng.NextDouble() < 0.01) ? true : false;
+						doubleMega = (rng.NextDouble() < 0.002) ? true : false;
+					}
 					trashItem = "";
 					if (doubleMega) {
 						trashItem = wikify("Garbage Hat");
